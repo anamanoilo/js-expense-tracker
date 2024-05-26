@@ -72,7 +72,7 @@ function addTransaction(e) {
     alert('All the fields must be filled');
     return;
   }
-  
+  //check if the input.amount is '0'/'000'/'00000000' etc.
   const normalizedAmount = Number(amount.value).toFixed(2);
   if (normalizedAmount === '0.00') {
     alert('Amount cannot be 0');
