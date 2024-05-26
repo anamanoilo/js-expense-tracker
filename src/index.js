@@ -72,14 +72,16 @@ function addTransaction(e) {
     alert('All the fields must be filled');
     return;
   }
-  if (amount.value.trim() === '0') {
+  
+  const normalizedAmount = Number(amount.value).toFixed(2);
+  if (normalizedAmount === '0.00') {
     alert('Amount cannot be 0');
     return;
   }
   const transactionObj = {
     id: uuidv4(),
-    [amount.name]: Number(amount.value).toFixed(2),
-    [text.name]: text.value,
+    [amount.name]: Number(normalizedAmount),
+    [text.name]: text.value.trim(),
   };
 
   transactions.push(transactionObj);
