@@ -108,11 +108,11 @@ function updateTotals(transactions) {
   let totalExpense = 0;
 
   for (const transaction of transactions) {
-    totalBalance += transaction.amount.toFixed(2);
+    totalBalance += transaction.amount;
     if (transaction.amount > 0) {
-      totalIncome += transaction.amount.toFixed(2);
+      totalIncome += transaction.amount;
     } else {
-      totalExpense += transaction.amount.toFixed(2);
+      totalExpense += transaction.amount;
     }
   }
   
