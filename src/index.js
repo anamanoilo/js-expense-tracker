@@ -1,52 +1,56 @@
+import { v4 as uuidv4 } from 'uuid';
 import * as storage from './js/services/localStorage';
+
+
+const transactionsToTest = [
+  {
+    id: '1',
+    amount: 2500,
+    text: 'Salary',
+  },
+  {
+    id: '2',
+    amount: -150,
+    text: 'Donation',
+  },
+  {
+    id: '3',
+    amount: -15,
+    text: 'Book',
+  },
+  {
+    id: '4',
+    amount: -3,
+    text: 'Coffee',
+  },
+  {
+    id: '5',
+    amount: 100,
+    text: 'Present',
+  },
+];
 
 const refs = {
   totalBalance: document.querySelector('#balance'),
   income: document.querySelector('#money-plus'),
   expense: document.querySelector('#money-minus'),
   transactionList: document.querySelector('#list'),
-  textInput: document.querySelector('input#text'),
-  amountInput: document.querySelector('input#amount'),
-  addTransactionBtn: document.querySelector('.btn'),
   form: document.querySelector('#form'),
 };
 
-const transactionsToTest = [
-  {
-    id: 1,
-    amount: 2500,
-    text: 'Salary',
-  },
-  {
-    id: 2,
-    amount: -250,
-    text: 'Donation',
-  },
-  {
-    id: 3,
-    amount: -15,
-    text: 'Book',
-  },
-  {
-    id: 4,
-    amount: -3,
-    text: 'Coffee',
-  },
-  {
-    id: 5,
-    amount: 100,
-    text: 'Present',
-  },
-];
 
-const transactions = transactionsToTest;
+let transactions = storage.get('transactions') || [];
 
-function renderTransactionList(transactions){ 
+renderTransactionList(transactions);
+updateTotals(transactions);
+refs.transactionList.addEventListener('click', deleteTransaction);
+refs.form.addEventListener('submit', addTransaction);
+
+function renderTransactionList(transactions) {
   const markup = transactions
     .map(({ id, amount, text }) => createTransactionMarkup({ id, amount, text }))
     .join('');
   refs.transactionList.insertAdjacentHTML('afterbegin', markup);
-
 }
 
 function createTransactionMarkup({ id, amount, text }) {
@@ -68,47 +72,55 @@ function addTransaction(e) {
     alert('All the fields must be filled');
     return;
   }
+  if (amount.value.trim() === '0') {
+    alert('Amount cannot be 0');
+    return;
+  }
   const transactionObj = {
-    id: Date.now().toString(),
+    id: uuidv4(),
+    [amount.name]: Number(amount.value).toFixed(2),
     [text.name]: text.value,
-    [amount.name]: Number(amount.value),
   };
-  console.log('typeof transactionObj.amount.value:', typeof transactionObj.amount.value);
 
-  console.log(transactionObj);
   transactions.push(transactionObj);
-  storage.save('transactions', transactions);
   const transactionMarkup = createTransactionMarkup(transactionObj);
   refs.transactionList.insertAdjacentHTML('beforeend', transactionMarkup);
+  updateTotals(transactions);
+  storage.save('transactions', transactions);
   e.currentTarget.reset();
 }
-refs.form.addEventListener('submit', addTransaction);
 
-function deleteTransactionById(e) {
-  const id = Number(e.target.id);
-  const filteredTransactions = transactions.filter(transaction => transaction.id !== id);
-  refs.transactionList.innerHTML = "";
-  renderTransactionList(filteredTransactions);
-  storage.save('transactions', filteredTransactions);
+
+function deleteTransaction(e) {
+  const id = e.target.id;
+  transactions = transactions.filter(transaction => transaction.id !== id);
+  refs.transactionList.innerHTML = '';
+  renderTransactionList(transactions);
+  updateTotals(transactions);
+  storage.save('transactions', transactions);
 }
 
 
+//count and render balance, income, expense in 1 loop
+function updateTotals(transactions) {
+  let totalBalance = 0;
+  let totalIncome = 0;
+  let totalExpense = 0;
 
-const total = transactions.reduce((acc, {amount})=>acc+=amount, 0)
-refs.totalBalance.textContent = `$${total}`;
+  for (const transaction of transactions) {
+    totalBalance += transaction.amount.toFixed(2);
+    if (transaction.amount > 0) {
+      totalIncome += transaction.amount.toFixed(2);
+    } else {
+      totalExpense += transaction.amount.toFixed(2);
+    }
+  }
+  
+  refs.totalBalance.textContent = `$${totalBalance}`;
+  refs.income.textContent = `$${totalIncome}`;
+  refs.expense.textContent = `$${-totalExpense}`;
+}
 
-let income = 0;
-let expense = 0;
 
-transactions.forEach(({ amount }) => {
-  return amount > 0 ? (income += amount) : expense+=amount
-})
-
-
-refs.income.textContent = `$${income}`;
-refs.expense.textContent = `$${-expense}`;
-renderTransactionList(transactions)
-  refs.deleteButton = document.querySelector('.delete-btn');
-  refs.deleteButton.addEventListener('click',  deleteTransactionById)
 
 
